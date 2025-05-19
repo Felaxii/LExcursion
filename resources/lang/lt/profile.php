@@ -1,0 +1,22 @@
+<?php
+return [
+    'your_profile'           => 'Jūsų profilis',
+    'email'                  => 'El. paštas:',
+    'password'               => 'Slaptažodis:',
+    'full_name'              => 'Pilnas vardas:',
+    'address'                => 'Adresas:',
+    'occupation'             => 'Profesija:',
+    'description'            => 'Aprašymas:',
+    'not_set'                => 'Nenurodyta',
+    'edit_profile_btn'       => 'Redaguoti profilį',
+    'edit_profile'           => 'Redaguoti profilį',
+    'field_nickname'         => 'Slapyvardis:',
+    'field_full_name'        => 'Pilnas vardas:',
+    'field_address'          => 'Adresas:',
+    'field_occupation'       => 'Profesija:',
+    'field_description'      => 'Aprašymas:',
+    'field_profile_picture'  => 'Profilio nuotrauka:',
+    'profile_picture_alt'    => 'Profilio nuotrauka',
+    'default_profile_alt'    => 'Numatytoji profilio nuotrauka',
+    'update_profile_btn'     => 'Atnaujinti profilį',
+];

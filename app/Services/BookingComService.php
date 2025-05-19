@@ -11,88 +11,76 @@ class BookingComService
 
     public function __construct()
     {
-        // Set these in your .env and config/services.php
         $this->apiKey  = config('services.bookingcom.key');
-        $this->apiHost = config('services.bookingcom.host'); // e.g., "booking-com.p.rapidapi.com"
+        $this->apiHost = config('services.bookingcom.host');
     }
 
-    /**
-     * Get destination ID for a city using the Booking.com locations endpoint.
-     *
-     * @param string $cityName
-     * @return string|null
-     */
-    public function getDestinationId(string $cityName)
+    public function getDestinationId(string $cityName): ?string
     {
-        $url = "https://{$this->apiHost}/v1/hotels/locations";
-        $params = [
-            'locale' => 'en-gb',
-            'name'   => $cityName,
-        ];
-
         $response = Http::withHeaders([
             'x-rapidapi-key'  => $this->apiKey,
             'x-rapidapi-host' => $this->apiHost,
-        ])->get($url, $params);
+        ])->get("https://{$this->apiHost}/v1/hotels/locations", [
+            'locale' => 'en-gb',
+            'name'   => $cityName,
+        ]);
 
         if ($response->failed()) {
-            throw new \Exception('Error fetching destination ID: ' . $response->body());
+            throw new \Exception('Error fetching destination ID: '.$response->body());
         }
 
-        $data = $response->json();
-        \Log::info('Destination search response for ' . $cityName . ': ' . json_encode($data));
-
-        if (is_array($data) && count($data) > 0 && isset($data[0]['dest_id'])) {
-            return $data[0]['dest_id'];
-        }
-        return null;
+        return $response->json()[0]['dest_id'] ?? null;
     }
 
-    /**
-     * Get hotels for a given destination using the Booking.com hotels search endpoint.
-     *
-     * If the API indicates that the dest_id is disabled, we return an empty array instead of throwing an exception.
-     *
-     * @param string $destId
-     * @param string $checkIn Date in YYYY-MM-DD format.
-     * @param string $checkOut Date in YYYY-MM-DD format.
-     * @param int $adultsNumber
-     * @param string $order_by
-     * @return array
-     */
-    public function getHotels(string $destId, string $checkIn, string $checkOut, int $adultsNumber = 2, string $order_by = 'price')
-    {
-        $url = "https://{$this->apiHost}/v1/hotels/search";
+    public function getHotels(
+        string $destId,
+        string $checkIn,
+        string $checkOut,
+        int    $adults  = 2,
+        string $orderBy = 'price'
+    ): array {
+        $currency = session('currency', 'EUR');
 
         $params = [
             'dest_type'          => 'city',
             'dest_id'            => $destId,
             'checkin_date'       => $checkIn,
             'checkout_date'      => $checkOut,
-            'adults_number'      => $adultsNumber,
+            'adults_number'      => $adults,
             'locale'             => 'en-gb',
-            'currency'           => 'EUR',  
-            'filter_by_currency' => 'EUR',  
-            'order_by'           => $order_by,
+            'currency'           => $currency,        
+            'filter_by_currency' => $currency,         
+            'order_by'           => $orderBy,
             'units'              => 'metric',
+            'include_adjacency'  => 'true',
             'room_number'        => '1',
         ];
+
+        \Log::debug('BookingComService.getHotels → sending currency:', ['currency'=>$currency,'params'=>$params]);
 
         $response = Http::withHeaders([
             'x-rapidapi-key'  => $this->apiKey,
             'x-rapidapi-host' => $this->apiHost,
-        ])->get($url, $params);
+        ])->get("https://{$this->apiHost}/v1/hotels/search", $params);
+
+        \Log::debug('Booking.com /hotels/search response status='.$response->status());
 
         if ($response->failed()) {
-            $json = $response->json();
-            if (isset($json['detail']) && $json['detail'] === 'This dest_id was disabled') {
-                \Log::warning("Disabled destination id {$destId} encountered.");
-                return []; // Return an empty result to allow graceful handling
+            $body = $response->json();
+            if (isset($body['detail']) && $body['detail'] === 'This dest_id was disabled') {
+                return ['result' => []];
             }
-            throw new \Exception('Error fetching hotels: ' . $response->body());
+            throw new \Exception('Error fetching hotels: '.$response->body());
         }
 
-        \Log::info('Hotels response: ' . $response->body());
-        return $response->json();
+        $data = $response->json();
+
+        foreach ($data['result'] as &$hotel) {
+            if (isset($hotel['distance_to_destination'])) {
+                $hotel['distance_from_center'] = $hotel['distance_to_destination'];
+            }
+        }
+
+        return $data;
     }
 }

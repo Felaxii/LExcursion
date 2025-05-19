@@ -19,9 +19,9 @@ class TravelOptionsController extends Controller
         $city = $request->query('city', 'Unknown');
         $departureDate = $request->query('date', date('Y-m-d'));
         $passengers = $request->query('travelers', 1);
-        $returnFlag = $request->query('return', 0); // 1 if return flight is requested
+        $returnFlag = $request->query('return', 0); 
         $returnDate = $request->query('returnDate', null);
-        $origin = 'VNO'; // Vilnius airport code
+        $origin = 'VNO'; 
 
         $destination = $this->mapCityToIATA($city);
 

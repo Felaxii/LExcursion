@@ -44,5 +44,8 @@ return [
     'key'  => env('BOOKINGCOM_KEY'),
     'host' => env('BOOKINGCOM_HOST'),
 ],
-
+'openai' => [
+    'key'    => env('OPENAI_API_KEY'),
+    'model'  => 'gpt-4o-mini',   
+],
 ];

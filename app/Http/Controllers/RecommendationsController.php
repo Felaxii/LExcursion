@@ -8,7 +8,6 @@ use Illuminate\Support\Str;
 class RecommendationsController extends Controller
 {
     protected $cities = [
-        // --- Exploration destinations ---
         [
             'name'        => 'Riga',
             'county'      => 'Latvia',
